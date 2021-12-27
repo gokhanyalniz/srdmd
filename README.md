@@ -1,12 +1,12 @@
 # SRDMD code, data and tutorials
-This repository contains the code used in 
+This repository contains code used in 
 [arXiv:2101.07516](https://arxiv.org/abs/2101.07516) along with tutorials to 
 install the requirements and reproduce some of the results in the paper.
 
 ## Installation of a Python environment with prerequisites
 We used
 [Anaconda 3](https://www.anaconda.com/products/individual),
-a Python 3 environment prepackaged with a scientific stack of libraries.
+a Python 3 environment with a scientific stack of libraries.
 (`Anaconda3-2021.11-Linux-x86_64` was used here, which comes with `Python 3.9.7`.)
 Assuming this environment is installed to `$ANACONDA3` and is active, 
 `which python` should print
@@ -17,7 +17,7 @@ and the directory
 ```
 ${ANACONDA3}/include/python3.9
 ```
-should also exist.
+should exist.
 
 We ask users with different Python installations to kindly adapt paths
 in the following compilation instructions.
@@ -44,9 +44,8 @@ alternatives to work with our changes:
 - *Or* use 
   [our fork of Channelflow with this patch already applied](https://github.com/gokhanyalniz/channelflow).
 
-Then please follow [Channelflow's instructions](https://github.com/epfl-ecps/channelflow/blob/master/INSTALL.md) to first install the DNS component, both
-to have that ready and to make sure you have the requirements ready.
-We had installed
+Then please follow [Channelflow's instructions](https://github.com/epfl-ecps/channelflow/blob/master/INSTALL.md) to first install the DNS component.
+We had installed for its requirements
 - CMake 3.22.1 (`cmake` is on the PATH)
 - GCC 11.1 (`g++` is on the PATH)
 - FFTW 3.3.10 (file `${USRLOCAL}/lib/libfftw3.a` exists)
