@@ -51,11 +51,11 @@ def main():
 
     args = vars(parser.parse_args())
 
-    dnsvis(**args)
+    vis(**args)
 
 
-def dnsvis(
-    state, noshow=False, xvfb=False, mirror_y=False, cvel=0.75, cvor=0.5,
+def vis(
+    state, noshow=False, xvfb=False, mirror_y=False, cvel=0.5, cvor=0.5,
 ):
 
     if xvfb:
@@ -68,7 +68,7 @@ def dnsvis(
 
     vorticity = cf.curl(velocity)
     vorticity.zeroPaddedModes()
-    state_vorticity = state.parent / f"{state.stem}_vor.nc"
+    state_vorticity = state.parent / f"vor_{state.name}"
     vorticity.save(str(state_vorticity.resolve()))
 
     xgrid, ygrid, zgrid, velx, _, _ = channelflow_to_numpy(state)
@@ -135,7 +135,7 @@ def dnsvis(
     # p.camera.view_up = [0.37308813472900676, 0.9240636797097904, -0.08313578992006013]
     # p.camera.clipping_range = [2.2454569218403426, 10.160445581565819]
 
-    p.show(screenshot=f"{state.stem}_isosurf.png")
+    p.show(screenshot=f"{state.name}_isosurf.png")
 
 
 def channelflow_to_numpy(statefile, uniform=False):
