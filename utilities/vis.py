@@ -45,8 +45,6 @@ def main():
 
     args = vars(parser.parse_args())
 
-    print(args)
-
     dnsvis(**args)
 
 
@@ -61,16 +59,25 @@ def dnsvis(
     pv.set_plot_theme("document")
     state = Path(state)
     velocity = cf.FlowField(str(state.resolve()))
+    nx_ = velocity.Nx
+    ny_ = velocity.Ny
+    nz_ = velocity.Nz
+    lx = velocity.Lx
+    lz = velocity.Lz
+    a = velocity.a
+    b = velocity.b
+
     vorticity = cf.curl(velocity)
+    vorticity.zeroPaddedModes()
     state_vorticity = state.parent / f"{state.stem}_vor.nc"
     vorticity.save(str(state_vorticity.resolve()))
 
     xgrid, ygrid, zgrid, velx, _, _ = channelflow_to_numpy(state)
     _, _, _, vorx, _, _ = channelflow_to_numpy(state_vorticity)
-
-    x_label = "$x$"
-    y_label = "$y$"
-    z_label = "$z$"
+    dx, dz = xgrid[1] - xgrid[0], zgrid[1] - zgrid[0]
+    nx, ny, nz = len(xgrid), len(ygrid), len(zgrid)
+    # print(f"lx, ly, lz = {dx*nx}, {ygrid[-1]-ygrid[0]}, {dz*nz}")
+    # print(f"nx, ny, nz = {nx}, {ny}, {nz}")
 
     u = pv.wrap(velx)
     om = pv.wrap(vorx)
