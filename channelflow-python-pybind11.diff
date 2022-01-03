@@ -86,10 +86,10 @@ index 6d8b708..f9b5ad9 100644
  
  file(READ "@HEAD_FILE@" HEAD_CONTENTS LIMIT 1024)
 diff --git a/python-wrapper/CMakeLists.txt b/python-wrapper/CMakeLists.txt
-index 07d5b92..5a266ff 100644
+index 07d5b92..7c833e4 100644
 --- a/python-wrapper/CMakeLists.txt
 +++ b/python-wrapper/CMakeLists.txt
-@@ -10,6 +10,5 @@ set(
+@@ -10,6 +10,6 @@ set(
  )
  
  # Define the target with appropriate dependencies
@@ -97,8 +97,8 @@ index 07d5b92..5a266ff 100644
 -target_include_directories(pycf SYSTEM PUBLIC ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
 -target_link_libraries(pycf PUBLIC ${Boost_LIBRARIES} nsolver chflow)
 +pybind11_add_module(libpycf cfwrapper.cpp)
++install(TARGETS libpycf DESTINATION lib)
 +target_link_libraries(libpycf PUBLIC ${pybind11_LIBRARIES} nsolver chflow)
-\ No newline at end of file
 diff --git a/python-wrapper/cfwrapper.cpp b/python-wrapper/cfwrapper.cpp
 index e0cd460..a718508 100644
 --- a/python-wrapper/cfwrapper.cpp

@@ -36,9 +36,14 @@ should exist.
 We ask users with different Python installations to kindly adapt paths
 in the following compilation instructions.
 
-We need the library `pybind11`, which can be installed to an Anaconda environment with
+We need the libraries `pybind11` and `pyvista`.
+We installed `pybind11` with `conda`
 ```
 conda install pybind11
+```
+and installed `pyvista` with `pip`
+```
+pip install pyvista
 ```
 
 ## Installation of the Python wrapper for Channelflow
@@ -68,7 +73,8 @@ the compiler used here:
 - HDF5 1.12.1 (file `${USRLOCAL}/lib/libhdf5.a` exists)
 - NetCDF-C 4.8.1 (file `${USRLOCAL}/lib/libnetcdf.a` exists)
 - OpenMPI 4.1.2 (`mpic++` is on the PATH)
-For compilation commands that we used see [Compiling other software](compiling_other_software).
+
+For the compilation commands that we used for these see [Compiling other software](compiling_other_software.md).
 
 To compile the Python wrapper component, create a build folder inside the repository, such as `build-python`, and inside the build folder run
 ```
@@ -76,6 +82,7 @@ cmake ../ \
 -DCMAKE_BUILD_TYPE=release \
 -DCMAKE_CXX_COMPILER=g++ \
 -DCMAKE_CXX_FLAGS="-L${USRLOCAL}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz -lcurl" \
+-DCMAKE_INSTALL_PREFIX=${USRLOCAL}/channelflow-python \
 -DFFTW_INCLUDE_DIR=${USRLOCAL}/include \
 -DFFTW_LIBRARY=${USRLOCAL}/lib/libfftw3.a \
 -DWITH_NETCDF=Serial \
@@ -84,15 +91,47 @@ cmake ../ \
 -DEIGEN3_INCLUDE_DIR=${USRLOCAL}/include/eigen3 \
 -DUSE_MPI=OFF \
 -DWITH_PYTHON=ON \
+-DWITH_GTEST=OFF \
 -DPYTHON_LIBRARY=${ANACONDA3}/lib \
 -DPYTHON_EXECUTABLE=${ANACONDA3}/bin/python \
 -DPYTHON_INCLUDE_DIR=${ANACONDA3}/include/python3.9 \
 -Dpybind11_DIR=${ANACONDA3}/share/cmake/pybind11
-make -j libpycf
+make -j install
 ```
-Afterwards, within the build folder, the file `python-wrapper/libpycf.cpython-39-x86_64-linux-gnu.so` should exist.
-This is the Python library which we will use to input/output and operate
-on Channelflow data within Python scripts.
-We will refer to the directory containing this library with `$CFPYTHON`,
-that is,
-the file `${CFPYTHON}/libpycf.cpython-39-x86_64-linux-gnu.so` exists.
+Afterwards, the file
+```
+${USRLOCAL}/channelflow-python/lib/libpycf.cpython-39-x86_64-linux-gnu.so
+```
+should exist.
+Note that this library is linked to the files `libchflow.so` and `libnsolver.so`
+in the same directory.
+It is therefore a good idea to point `LD_LIBRARY_PATH` to it:
+```
+export LD_LIBRARY_PATH=${USRLOCAL}/channelflow-python/lib:$LD_LIBRARY_PATH
+```
+
+### libstdc++ errors
+When you do `import libpycf` in Python, if you encounter an error of the sort
+```
+ImportError: /home/gokhan/usr/local/anaconda3/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /home/gokhan/usr/local/channelflow-python/lib/libpycf.cpython-39-x86_64-linux-gnu.so)
+```
+first, find where `libstdc++.so.6` is in your system _outside_
+the Python environment.
+In Ubuntu this should be at
+```
+/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+```
+in Arch Linux at
+```
+/usr/lib/libstdc++.so.6
+```
+We will use this to replace the copy in the Python environment.
+First backup the Python environment's copy:
+```
+mv -vf ${ANACONDA3}/lib/libstdc++.so.6 ${ANACONDA3}/lib/libstdc++.so.6.old
+```
+Then, create a link to the system copy at the Python environment.
+Using the Ubuntu path as an example, that can be done with
+```
+ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6 ${ANACONDA3}/lib/libstdc++.so.6
+```
