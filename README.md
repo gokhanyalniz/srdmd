@@ -1,13 +1,27 @@
 # SRDMD code, data and tutorials
-This repository contains code used in 
+This repository contains code and data used in 
 [arXiv:2101.07516](https://arxiv.org/abs/2101.07516) along with tutorials to 
-install the requirements and reproduce some of the results in the paper.
+use the code and reproduce some of the results of the paper.
 
-## Installation of a Python environment with prerequisites
+## Note on aliases
+We use aliases like `USRLOCAL` throughout for ease. One can define it with
+```
+export USRLOCAL=/usr/local
+```
+Running
+```
+echo $USRLOCAL
+```
+should then print the path it is aliased to.
+
+If you do not want to use such aliases, you can replace them with the 
+corresponding paths in what follows.
+
+## Installation of a Python environment with the prerequisites
 We used
 [Anaconda 3](https://www.anaconda.com/products/individual),
 a Python 3 environment with a scientific stack of libraries.
-(`Anaconda3-2021.11-Linux-x86_64` was used here, which comes with `Python 3.9.7`.)
+(Specifically `Anaconda3-2021.11-Linux-x86_64`, which comes with `Python 3.9.7`.)
 Assuming this environment is installed to `$ANACONDA3` and is active, 
 `which python` should print
 ```
@@ -17,7 +31,7 @@ and the directory
 ```
 ${ANACONDA3}/include/python3.9
 ```
-should exist.
+should exist. 
 
 We ask users with different Python installations to kindly adapt paths
 in the following compilation instructions.
@@ -30,7 +44,7 @@ conda install pybind11
 ## Installation of the Python wrapper for Channelflow
 We used [Channelflow](https://github.com/epfl-ecps/channelflow) for the
 direct numerical simulations (DNS) of various channel geometries.
-It comes with a Python wrapper, which we changed to run with `pybind11`
+It comes with a Python wrapper, which we changed to use `pybind11`
 instead of `Boost.Python`, along with other changes.
 As we have not yet had this change merged to upstream yet, there are two
 alternatives to work with our changes:
@@ -45,7 +59,8 @@ alternatives to work with our changes:
   [our fork of Channelflow with this patch already applied](https://github.com/gokhanyalniz/channelflow).
 
 Then please follow [Channelflow's instructions](https://github.com/epfl-ecps/channelflow/blob/master/INSTALL.md) to first install the DNS component.
-We had installed for its requirements
+We had installed its required libraries to `$USRLOCAL`, we list them and
+the compiler used here:
 - CMake 3.22.1 (`cmake` is on the PATH)
 - GCC 11.1 (`g++` is on the PATH)
 - FFTW 3.3.10 (file `${USRLOCAL}/lib/libfftw3.a` exists)
@@ -53,10 +68,7 @@ We had installed for its requirements
 - HDF5 1.12.1 (file `${USRLOCAL}/lib/libhdf5.a` exists)
 - NetCDF-C 4.8.1 (file `${USRLOCAL}/lib/libnetcdf.a` exists)
 - OpenMPI 4.1.2 (`mpic++` is on the PATH)
-
-The prepended `$USRLOCAL`s need not be the same for all these,
-kindly note it for each case and adapt the following compilation instructions
-accordingly.
+For compilation commands that we used see [Compiling other software](compiling_other_software).
 
 To compile the Python wrapper component, create a build folder inside the repository, such as `build-python`, and inside the build folder run
 ```
