@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import sys
+from os import getenv
 from pathlib import Path
 
 import h5py
@@ -8,12 +9,17 @@ import numpy as np
 import pyvista as pv
 import scipy.interpolate as spi
 
-# Set the paths to neubauten and channelflow below
 # fmt: off
-# This adds channelflow/build/python-wrapper to the interpreter's path
-channelflowPython = Path('/nfs/scistore12/hofgrp/gyalniz/') / 'channelflow/build-gcc10.2/python-wrapper'
-sys.path.append(str(channelflowPython.resolve()))
+# Set the paths to channelflow-python
+CHANNELFLOW_PYTHON = getenv("CHANNELFLOW_PYTHON")
+if CHANNELFLOW_PYTHON is None:
+    exit("Set the alias CHANNELFLOW_PYTHON to use this script.")
+else:
+    CHANNELFLOW_PYTHON = Path(CHANNELFLOW_PYTHON)
+sys.path.append(str((CHANNELFLOW_PYTHON / "lib").resolve()))
 import libpycf as cf
+
+# fmt: on
 
 
 def main():
@@ -74,10 +80,10 @@ def vis(
     xgrid, ygrid, zgrid, velx, _, _ = channelflow_to_numpy(state)
     _, _, _, vorx, _, _ = channelflow_to_numpy(state_vorticity)
     nx, ny, nz = len(xgrid), len(ygrid), len(zgrid)
-    lx = velocity.Lx
-    lz = velocity.Lz
-    print(f"nx, ny, nz = {nx}, {ny}, {nz}")
-    print(f"lx, lz = {lx}, {lz}")
+    # lx = velocity.Lx
+    # lz = velocity.Lz
+    # print(f"nx, ny, nz = {nx}, {ny}, {nz}")
+    # print(f"lx, lz = {lx}, {lz}")
 
     ny_display = ny
     if mirror_y:

@@ -65,7 +65,7 @@ alternatives to work with our changes:
 
 Then please follow [Channelflow's instructions](https://github.com/epfl-ecps/channelflow/blob/master/INSTALL.md) to first install the DNS component.
 We had installed its required libraries to `$USRLOCAL`, we list them and
-the compiler used here:
+the compilers used here:
 - CMake 3.22.1 (`cmake` is on the PATH)
 - GCC 11.1 (`g++` is on the PATH)
 - FFTW 3.3.10 (file `${USRLOCAL}/lib/libfftw3.a` exists)
@@ -76,13 +76,16 @@ the compiler used here:
 
 For the compilation commands that we used for these see [Compiling other software](compiling_other_software.md).
 
-To compile the Python wrapper component, create a build folder inside the repository, such as `build-python`, and inside the build folder run
+To compile the Python wrapper component, create a build folder inside the repository, such as `build-python` and go into it.
+Point the alias `CHANNELFLOW_PYTHON` to where you would like to install, we 
+will refer to this alias in the Python scripts as well.
+Then run
 ```
 cmake ../ \
 -DCMAKE_BUILD_TYPE=release \
 -DCMAKE_CXX_COMPILER=g++ \
--DCMAKE_CXX_FLAGS="-L${USRLOCAL}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz -lcurl" \
--DCMAKE_INSTALL_PREFIX=${USRLOCAL}/channelflow-python \
+-DCMAKE_CXX_FLAGS="-L${USRLOCAL}/lib -lnetcdf -lhdf5_hl -lhdf5 -lzip -lcurl" \
+-DCMAKE_INSTALL_PREFIX=$CHANNELFLOW_PYTHON \
 -DFFTW_INCLUDE_DIR=${USRLOCAL}/include \
 -DFFTW_LIBRARY=${USRLOCAL}/lib/libfftw3.a \
 -DWITH_NETCDF=Serial \
@@ -100,23 +103,20 @@ make -j install
 ```
 Afterwards, the file
 ```
-${USRLOCAL}/channelflow-python/lib/libpycf.cpython-39-x86_64-linux-gnu.so
+${CHANNELFLOW_PYTHON}/lib/libpycf.cpython-39-x86_64-linux-gnu.so
 ```
 should exist.
-Note that this library is linked to the files `libchflow.so` and `libnsolver.so`
-in the same directory.
-It is therefore a good idea to point `LD_LIBRARY_PATH` to it:
-```
-export LD_LIBRARY_PATH=${USRLOCAL}/channelflow-python/lib:$LD_LIBRARY_PATH
-```
+Note that this library is linked to the files 
+`libchflow.so` and `libnsolver.so` in the same directory.
+You will need to point `LD_LIBRARY_PATH` to this directory if 
+you move it and keep `libpycf-*.so` separate.
 
 ### libstdc++ errors
 When you do `import libpycf` in Python, if you encounter an error of the sort
 ```
-ImportError: /home/gokhan/usr/local/anaconda3/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /home/gokhan/usr/local/channelflow-python/lib/libpycf.cpython-39-x86_64-linux-gnu.so)
+ImportError: ../anaconda3/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by ../channelflow-python/lib/libpycf.cpython-39-x86_64-linux-gnu.so)
 ```
-first, find where `libstdc++.so.6` is in your system _outside_
-the Python environment.
+find where `libstdc++.so.6` is in your system _outside_ the Python environment.
 In Ubuntu this should be at
 ```
 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
