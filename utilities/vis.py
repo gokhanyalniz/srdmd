@@ -169,11 +169,20 @@ def vis(
     p.camera.azimuth -= 45
     p.camera.roll -= 10
 
+    # Old orientations from neubauten
     # p.camera.position = [-3.8165567986481825, 2.432563985013201, 1.623442321119651]
     # p.camera.focal_point = [1.5630592574663666, 0.15588548135152808, 0.4599843715554596]
     # p.camera.view_angle = 30.0
     # p.camera.view_up = [0.37308813472900676, 0.9240636797097904, -0.08313578992006013]
     # p.camera.clipping_range = [2.2454569218403426, 10.160445581565819]
+
+    # Elena's numbers
+    # scene.scene.camera.position = [-3.8165567986481825, 2.432563985013201, 1.623442321119651]
+    # scene.scene.camera.focal_point = [1.5630592574663666, 0.15588548135152808, 0.4599843715554596]
+    # scene.scene.camera.view_angle = 30.0
+    # scene.scene.camera.view_up = [0.37308813472900676, 0.9240636797097904, -0.08313578992006013]
+    # scene.scene.camera.clipping_range = [2.2454569218403426, 10.160445581565819]
+    # scene.scene.camera.compute_view_plane_normal()
 
     p.show(screenshot=f"{state.name}_isosurf.png")
 

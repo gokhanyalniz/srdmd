@@ -32,7 +32,7 @@ def_joblib_verbosity = 0
 def_joblib_backend = "threading"
 
 # Example ffmpeg command to merge png files to an mp4:
-# ffmpeg -framerate 24 -i %06d.png -c:v libx264 -r 60 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" out.mp4
+# ffmpeg -framerate 24 -i %03d.png -c:v libx264 -r 60 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" out.mp4
 
 # Two videos can be merged side-by-side with
 # ffmpeg -i left.mp4 -i right.mp4 -filter_complex hstack output.mp4
