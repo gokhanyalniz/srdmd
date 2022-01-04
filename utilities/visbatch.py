@@ -117,8 +117,6 @@ def visbatch(
             xgrid, ygrid, zgrid, velx, _, _ = vis.channelflow_to_numpy(state)
             _, _, _, vorx, _, _ = vis.channelflow_to_numpy(state_vorticity)
             nx, ny, nz = len(xgrid), len(ygrid), len(zgrid)
-            lx = velocity.Lx
-            lz = velocity.Lz
 
             ny_display = ny
             if mirror_y:
@@ -137,10 +135,10 @@ def visbatch(
             max_vel, max_vor = max(max_vel, np.amax(velx)), max(max_vor, np.amax(vorx))
             pbar.update()
 
-    # print("Minima:")
-    # print(min_vel, min_vor)
-    # print("Maxima:")
-    # print(max_vel, max_vor)
+    print("Minima:")
+    print(min_vel, min_vor)
+    print("Maxima:")
+    print(max_vel, max_vor)
 
     if xvfb:
         pv.start_xvfb()
@@ -167,8 +165,8 @@ def visbatch(
         else:
             ny_display = ny
 
-        vel_levels = cvel * np.array([np.amin(velx), np.amax(velx)])
-        vor_levels = cvor * np.array([np.amin(vorx), np.amax(vorx)])
+        vel_levels = cvel * np.array([min_vel, max_vel])
+        vor_levels = cvor * np.array([min_vor, max_vor])
 
         state_vorticity.unlink()
 
@@ -180,22 +178,26 @@ def visbatch(
         p = pv.Plotter(off_screen=True)
         p.set_background("white")
         p.add_mesh(grid.outline(), color="k")
-        p.add_mesh(
-            grid.contour(isosurfaces=vel_levels, scalars="velx"),
-            smooth_shading=True,
-            opacity=0.35,
-            cmap=["blue", "red"],
-            clim=vel_levels,
-            show_scalar_bar=False,
-        )
-        p.add_mesh(
-            grid.contour(isosurfaces=vor_levels, scalars="vorx"),
-            smooth_shading=True,
-            opacity=0.35,
-            cmap=["purple", "green"],
-            clim=vor_levels,
-            show_scalar_bar=False,
-        )
+        contour_vel = grid.contour(isosurfaces=vel_levels, scalars="velx")
+        if contour_vel.n_points > 0:
+            p.add_mesh(
+                contour_vel,
+                smooth_shading=True,
+                opacity=0.35,
+                cmap=["blue", "red"],
+                clim=vel_levels,
+                show_scalar_bar=False,
+            )
+        contour_vor = grid.contour(isosurfaces=vor_levels, scalars="vorx")
+        if contour_vor.n_points > 0:
+            p.add_mesh(
+                contour_vor,
+                smooth_shading=True,
+                opacity=0.35,
+                cmap=["purple", "green"],
+                clim=vor_levels,
+                show_scalar_bar=False,
+            )
         if show_axes:
             p.show_axes()
 

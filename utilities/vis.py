@@ -55,10 +55,7 @@ def main():
         help="display the fundamental domain of mirror_y.",
     )
     parser.add_argument(
-        "--show_axes",
-        action="store_true",
-        dest="show_axes",
-        help="display compass.",
+        "--show_axes", action="store_true", dest="show_axes", help="display compass.",
     )
     parser.add_argument(
         "--show_bounds",
@@ -121,6 +118,11 @@ def vis(
     vel_levels = cvel * np.array([np.amin(velx), np.amax(velx)])
     vor_levels = cvor * np.array([np.amin(vorx), np.amax(vorx)])
 
+    print("Minima:")
+    print(np.amin(velx), np.amin(vorx))
+    print("Maxima:")
+    print(np.amax(velx), np.amax(vorx))
+
     state_vorticity.unlink()
 
     grid = pv.RectilinearGrid(xgrid, ygrid, zgrid)
@@ -131,22 +133,26 @@ def vis(
     p = pv.Plotter(off_screen=noshow)
     p.set_background("white")
     p.add_mesh(grid.outline(), color="k")
-    p.add_mesh(
-        grid.contour(isosurfaces=vel_levels, scalars="velx"),
-        smooth_shading=True,
-        opacity=0.35,
-        cmap=["blue", "red"],
-        clim=vel_levels,
-        show_scalar_bar=False,
-    )
-    p.add_mesh(
-        grid.contour(isosurfaces=vor_levels, scalars="vorx"),
-        smooth_shading=True,
-        opacity=0.35,
-        cmap=["purple", "green"],
-        clim=vor_levels,
-        show_scalar_bar=False,
-    )
+    contour_vel = grid.contour(isosurfaces=vel_levels, scalars="velx")
+    if contour_vel.n_points > 0:
+        p.add_mesh(
+            contour_vel,
+            smooth_shading=True,
+            opacity=0.35,
+            cmap=["blue", "red"],
+            clim=vel_levels,
+            show_scalar_bar=False,
+        )
+    contour_vor = grid.contour(isosurfaces=vor_levels, scalars="vorx")
+    if contour_vor.n_points > 0:
+        p.add_mesh(
+            contour_vor,
+            smooth_shading=True,
+            opacity=0.35,
+            cmap=["purple", "green"],
+            clim=vor_levels,
+            show_scalar_bar=False,
+        )
     if show_axes:
         p.show_axes()
 
