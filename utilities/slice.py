@@ -57,10 +57,10 @@ def main():
         help="save sliced states to disk.",
     )
     parser.add_argument(
-        "--reprocess",
+        "--align",
         action="store_true",
-        dest="reprocess",
-        help="reprocess existing data.",
+        dest="align",
+        help="align shifts such that the first state is not shifted.",
     )
     parser.add_argument(
         "--f_subsamp",
@@ -81,7 +81,7 @@ def slice(
     t_i=-np.inf,
     t_f=np.inf,
     savestates=False,
-    reprocess=False,
+    align=False,
     f_subsamp=1,
 ):
     rundir = Path(rundir).resolve()
@@ -111,41 +111,41 @@ def slice(
 
     print(f"Slicing from time {times[0]} to time {times[- 1]} with dt {dt}.")
 
-    if not reprocess:
+    tx = cf.FlowField(str((savedir / f"slicetempx.nc").resolve()))
+    tz = cf.FlowField(str((savedir / f"slicetempz.nc").resolve()))
+    tgx = apply_shifts(tx, [-0.25, 0])
+    tgz = apply_shifts(tz, [0, -0.25])
 
-        tx = cf.FlowField(str((savedir / f"slicetempx.nc").resolve()))
-        tz = cf.FlowField(str((savedir / f"slicetempz.nc").resolve()))
-        tgx = apply_shifts(tx, [-0.25, 0])
-        tgz = apply_shifts(tz, [0, -0.25])
+    shifts = np.zeros((n_states, 2))
+    projections_x = np.zeros((n_states), dtype=np.complex128)
+    projections_z = np.zeros((n_states), dtype=np.complex128)
 
-        shifts = np.zeros((n_states, 2))
-        projections_x = np.zeros((n_states), dtype=np.complex128)
-        projections_z = np.zeros((n_states), dtype=np.complex128)
+    if align:
+        state = cf.FlowField(statefiles[0])
+        shiftx0, shiftz0, _, _, _, _ = find_shifts(state, tgx, tx, tgz, tz)
 
-        def fill_shifts(i):
-            state = cf.FlowField(statefiles[i])
-            shiftx, shiftz, ptgx, ptx, ptgz, ptz = find_shifts(state, tgx, tx, tgz, tz)
-            shifts[i, :] = np.array([shiftx, shiftz])
-            projections_x[i] = ptx + 1j * ptgx
-            projections_z[i] = ptz + 1j * ptgz
-            state = apply_shifts(state, shifts[i, :])
-            if savestates:
-                statename = Path(statefiles[i]).name
-                stateout = str((savedir / statename).resolve())
-                state.save(stateout)
+    def fill_shifts(i):
+        state = cf.FlowField(statefiles[i])
+        shiftx, shiftz, ptgx, ptx, ptgz, ptz = find_shifts(state, tgx, tx, tgz, tz)
+        if align:
+            shiftx = shiftx - shiftx0
+            shiftz = shiftz - shiftz0
+        shifts[i, :] = np.array([shiftx, shiftz])
+        projections_x[i] = ptx + 1j * ptgx
+        projections_z[i] = ptz + 1j * ptgz
+        state = apply_shifts(state, shifts[i, :])
+        if savestates:
+            statename = Path(statefiles[i]).name
+            stateout = str((savedir / statename).resolve())
+            state.save(stateout)
 
-        ProgressParallel(n_jobs=n_jobs, backend="threading", total=n_states)(
-            delayed(fill_shifts)(i) for i in range(n_states)
-        )
+    ProgressParallel(n_jobs=n_jobs, backend="threading", total=n_states)(
+        delayed(fill_shifts)(i) for i in range(n_states)
+    )
 
-        np.savetxt(savedir / "shifts.gp", shifts)
-        np.savetxt(savedir / "projections_x.gp", projections_x.view(float))
-        np.savetxt(savedir / "projections_z.gp", projections_z.view(float))
-
-    else:
-        shifts = np.loadtxt(savedir / "shifts.gp")
-        projections_x = np.loadtxt(savedir / "projections_x.gp").view(complex)
-        projections_z = np.loadtxt(savedir / "projections_z.gp").view(complex)
+    np.savetxt(savedir / "shifts.gp", shifts)
+    np.savetxt(savedir / "projections_x.gp", projections_x.view(float))
+    np.savetxt(savedir / "projections_z.gp", projections_z.view(float))
 
     phases_x = np.unwrap(shifts[:, 0] * 2 * np.pi)
     phases_z = np.unwrap(shifts[:, 1] * 2 * np.pi)

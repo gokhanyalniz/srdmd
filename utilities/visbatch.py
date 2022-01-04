@@ -34,6 +34,9 @@ def_joblib_backend = "threading"
 # Example ffmpeg command to merge png files to an mp4:
 # ffmpeg -framerate 24 -i %06d.png -c:v libx264 -r 60 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" out.mp4
 
+# Two videos can be merged side-by-side with
+# ffmpeg -i left.mp4 -i right.mp4 -filter_complex hstack output.mp4
+
 # This script removes the laminar part
 
 
@@ -66,6 +69,18 @@ def main():
         dest="mirror_y",
         help="display the fundamental domain of mirror_y.",
     )
+    parser.add_argument(
+        "--show_axes",
+        action="store_true",
+        dest="show_axes",
+        help="display compass.",
+    )
+    parser.add_argument(
+        "--show_bounds",
+        action="store_true",
+        dest="show_bounds",
+        help="display ticks on the grid.",
+    )
     args = vars(parser.parse_args())
 
     visbatch(**args)
@@ -79,6 +94,8 @@ def visbatch(
     mirror_y=False,
     print_messages=True,
     n_jobs=def_n_jobs,
+    show_axes=False,
+    show_bounds=False,
 ):
 
     statesDir = Path(statesDir)
@@ -86,7 +103,7 @@ def visbatch(
     min_vel, min_vor = np.inf, np.inf
     max_vel, max_vor = -np.inf, -np.inf
 
-    print("Finding the maxima in the snapshots.")
+    print("Finding levels.")
     with tqdm(total=len(states), disable=not print_messages) as pbar:
         for i, state in enumerate(states):
             state = Path(state)
@@ -120,28 +137,22 @@ def visbatch(
             max_vel, max_vor = max(max_vel, np.amax(velx)), max(max_vor, np.amax(vorx))
             pbar.update()
 
-    print("Minima:")
-    print(min_vel, min_vor)
-    print("Maxima:")
-    print(max_vel, max_vor)
+    # print("Minima:")
+    # print(min_vel, min_vor)
+    # print("Maxima:")
+    # print(max_vel, max_vor)
 
     if xvfb:
         pv.start_xvfb()
+    pv.set_plot_theme("document")
 
     def render_state_i(i):
         state = Path(states[i])
-        velocity = cf.FlowField(str(state.resolve()))
-
-        vorticity = cf.curl(velocity)
-        vorticity.zeroPaddedModes()
         state_vorticity = state.parent / f"vor_{state.name}"
-        vorticity.save(str(state_vorticity.resolve()))
 
         xgrid, ygrid, zgrid, velx, _, _ = vis.channelflow_to_numpy(state)
         _, _, _, vorx, _, _ = vis.channelflow_to_numpy(state_vorticity)
         nx, ny, nz = len(xgrid), len(ygrid), len(zgrid)
-        lx = velocity.Lx
-        lz = velocity.Lz
 
         ny_display = ny
         if mirror_y:
@@ -159,12 +170,15 @@ def visbatch(
         vel_levels = cvel * np.array([np.amin(velx), np.amax(velx)])
         vor_levels = cvor * np.array([np.amin(vorx), np.amax(vorx)])
 
+        state_vorticity.unlink()
+
         grid = pv.RectilinearGrid(xgrid, ygrid, zgrid)
         # sad to need order="F" here
         grid.point_data["velx"] = np.reshape(velx, (nx * ny_display * nz), order="F")
         grid.point_data["vorx"] = np.reshape(vorx, (nx * ny_display * nz), order="F")
 
         p = pv.Plotter(off_screen=True)
+        p.set_background("white")
         p.add_mesh(grid.outline(), color="k")
         p.add_mesh(
             grid.contour(isosurfaces=vel_levels, scalars="velx"),
@@ -182,8 +196,14 @@ def visbatch(
             clim=vor_levels,
             show_scalar_bar=False,
         )
-        p.show_axes()
-        p.show_bounds(xlabel="x", ylabel="y", zlabel="z")
+        if show_axes:
+            p.show_axes()
+
+        if show_bounds:
+            if not show_axes:
+                p.show_bounds(xlabel="x", ylabel="y", zlabel="z")
+            else:
+                p.show_bounds(xlabel="", ylabel="", zlabel="")
 
         p.camera.roll += 90
         p.camera.elevation -= 15
@@ -192,12 +212,13 @@ def visbatch(
         p.camera.azimuth -= 45
         p.camera.roll -= 10
 
-        p.show(screenshot=f"{state.stem}_isosurf.png")
+        p.show(screenshot=f"{state.name}_isosurf.png")
 
         # hope memory doesn't leak
         p.clear()
         p.deep_clean()
 
+    print("Rendering frames.")
     Parallel(n_jobs=n_jobs, backend=def_joblib_backend, verbose=def_joblib_verbosity)(
         delayed(render_state_i)(i) for i in tqdm(range(len(states)))
     )

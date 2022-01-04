@@ -35,12 +35,6 @@ def main():
         "--xvfb", action="store_true", dest="xvfb", help="render to a virtual display."
     )
     parser.add_argument(
-        "--mirror_y",
-        action="store_true",
-        dest="mirror_y",
-        help="display the fundamental domain of mirror_y.",
-    )
-    parser.add_argument(
         "-cvel",
         default=0.5,
         type=float,
@@ -54,6 +48,24 @@ def main():
         dest="cvor",
         help="multiplier for vorticity isosurfaces",
     )
+    parser.add_argument(
+        "--mirror_y",
+        action="store_true",
+        dest="mirror_y",
+        help="display the fundamental domain of mirror_y.",
+    )
+    parser.add_argument(
+        "--show_axes",
+        action="store_true",
+        dest="show_axes",
+        help="display compass.",
+    )
+    parser.add_argument(
+        "--show_bounds",
+        action="store_true",
+        dest="show_bounds",
+        help="display ticks on the grid.",
+    )
 
     args = vars(parser.parse_args())
 
@@ -61,7 +73,14 @@ def main():
 
 
 def vis(
-    state, noshow=False, xvfb=False, mirror_y=False, cvel=0.5, cvor=0.5,
+    state,
+    noshow=False,
+    xvfb=False,
+    mirror_y=False,
+    cvel=0.5,
+    cvor=0.5,
+    show_axes=False,
+    show_bounds=False,
 ):
 
     if xvfb:
@@ -102,12 +121,15 @@ def vis(
     vel_levels = cvel * np.array([np.amin(velx), np.amax(velx)])
     vor_levels = cvor * np.array([np.amin(vorx), np.amax(vorx)])
 
+    state_vorticity.unlink()
+
     grid = pv.RectilinearGrid(xgrid, ygrid, zgrid)
     # sad to need order="F" here
     grid.point_data["velx"] = np.reshape(velx, (nx * ny_display * nz), order="F")
     grid.point_data["vorx"] = np.reshape(vorx, (nx * ny_display * nz), order="F")
 
     p = pv.Plotter(off_screen=noshow)
+    p.set_background("white")
     p.add_mesh(grid.outline(), color="k")
     p.add_mesh(
         grid.contour(isosurfaces=vel_levels, scalars="velx"),
@@ -125,8 +147,14 @@ def vis(
         clim=vor_levels,
         show_scalar_bar=False,
     )
-    p.show_axes()
-    p.show_bounds(xlabel="x", ylabel="y", zlabel="z")
+    if show_axes:
+        p.show_axes()
+
+    if show_bounds:
+        if not show_axes:
+            p.show_bounds(xlabel="x", ylabel="y", zlabel="z")
+        else:
+            p.show_bounds(xlabel="", ylabel="", zlabel="")
 
     p.camera.roll += 90
     p.camera.elevation -= 15
