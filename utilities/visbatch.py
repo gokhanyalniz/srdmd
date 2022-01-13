@@ -142,7 +142,7 @@ def visbatch(
 ):
 
     statesDir = Path(statesDir)
-    if userecon:
+    if not userecon:
         states = sorted(list(statesDir.glob("u*.nc")))
     else:
         states = sorted(list(statesDir.glob("recon*.nc")))
@@ -189,10 +189,11 @@ def visbatch(
                 )
                 pbar.update()
 
-        print("Minima:")
-        print(min_vel, min_vor)
-        print("Maxima:")
-        print(max_vel, max_vor)
+        vel_levels = cvel * np.array([min_vel, max_vel])
+        vor_levels = cvor * np.array([min_vor, max_vor])
+
+        print("vel_levels:", vel_levels)
+        print("vor_levels:", vor_levels)
 
     if xvfb:
         pv.start_xvfb()
@@ -227,12 +228,12 @@ def visbatch(
         else:
             ny_display = ny
 
-        if not manual:
-            vel_levels = cvel * np.array([min_vel, max_vel])
-            vor_levels = cvor * np.array([min_vor, max_vor])
-        else:
+        if manual:
             vel_levels = np.array([lvelmin, lvelmax])
             vor_levels = np.array([lvormin, lvormax])
+        else:
+            vel_levels = cvel * np.array([min_vel, max_vel])
+            vor_levels = cvor * np.array([min_vor, max_vor])
 
         state_vorticity.unlink()
 
