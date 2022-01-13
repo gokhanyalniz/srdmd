@@ -43,10 +43,44 @@ def main():
     )
     parser.add_argument(
         "-cvor",
-        default=0.5,
+        default=0.25,
         type=float,
         dest="cvor",
         help="multiplier for vorticity isosurfaces",
+    )
+    parser.add_argument(
+        "--manual",
+        action="store_true",
+        dest="manual",
+        help="use manually provided (lvelmin/max, lvormin/max) isosurface levels.",
+    )
+    parser.add_argument(
+        "-lvelmin",
+        default=0,
+        type=float,
+        dest="lvelmin",
+        help="lower velocity isosurface",
+    )
+    parser.add_argument(
+        "-lvelmax",
+        default=0,
+        type=float,
+        dest="lvelmax",
+        help="upper velocity isosurface",
+    )
+    parser.add_argument(
+        "-lvormin",
+        default=0,
+        type=float,
+        dest="lvormin",
+        help="lower vorticity isosurface",
+    )
+    parser.add_argument(
+        "-lvormax",
+        default=0,
+        type=float,
+        dest="lvormax",
+        help="upper vorticity isosurface",
     )
     parser.add_argument(
         "--mirror_y",
@@ -75,7 +109,12 @@ def vis(
     xvfb=False,
     mirror_y=False,
     cvel=0.5,
-    cvor=0.5,
+    cvor=0.25,
+    manual=False,
+    lvelmin=0,
+    lvelmax=0,
+    lvormin=0,
+    lvormax=0,
     show_axes=False,
     show_bounds=False,
 ):
@@ -115,13 +154,15 @@ def vis(
     else:
         ny_display = ny
 
-    vel_levels = cvel * np.array([np.amin(velx), np.amax(velx)])
-    vor_levels = cvor * np.array([np.amin(vorx), np.amax(vorx)])
+    if not manual:
+        vel_levels = cvel * np.array([np.amin(velx), np.amax(velx)])
+        vor_levels = cvor * np.array([np.amin(vorx), np.amax(vorx)])
 
-    print("Minima:")
-    print(np.amin(velx), np.amin(vorx))
-    print("Maxima:")
-    print(np.amax(velx), np.amax(vorx))
+        print("vel_levels:", vel_levels)
+        print("vor_levels:", vor_levels)
+    else:
+        vel_levels = np.array([lvelmin, lvelmax])
+        vor_levels = np.array([lvormin, lvormax])
 
     state_vorticity.unlink()
 

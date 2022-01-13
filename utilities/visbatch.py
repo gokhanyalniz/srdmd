@@ -47,6 +47,12 @@ def main():
     )
     parser.add_argument("statesDir", type=str, help="path to the state.")
     parser.add_argument(
+        "--userecon",
+        action="store_true",
+        dest="userecon",
+        help="expect DMD-reconstructed data as input.",
+    )
+    parser.add_argument(
         "--xvfb", action="store_true", dest="xvfb", help="render to a virtual display."
     )
     parser.add_argument(
@@ -58,10 +64,44 @@ def main():
     )
     parser.add_argument(
         "-cvor",
-        default=0.5,
+        default=0.25,
         type=float,
         dest="cvor",
         help="multiplier for vorticity isosurfaces",
+    )
+    parser.add_argument(
+        "--manual",
+        action="store_true",
+        dest="manual",
+        help="use manually provided (lvelmin/max, lvormin/max) isosurface levels.",
+    )
+    parser.add_argument(
+        "-lvelmin",
+        default=0,
+        type=float,
+        dest="lvelmin",
+        help="lower velocity isosurface",
+    )
+    parser.add_argument(
+        "-lvelmax",
+        default=0,
+        type=float,
+        dest="lvelmax",
+        help="upper velocity isosurface",
+    )
+    parser.add_argument(
+        "-lvormin",
+        default=0,
+        type=float,
+        dest="lvormin",
+        help="lower vorticity isosurface",
+    )
+    parser.add_argument(
+        "-lvormax",
+        default=0,
+        type=float,
+        dest="lvormax",
+        help="upper vorticity isosurface",
     )
     parser.add_argument(
         "--mirror_y",
@@ -70,10 +110,7 @@ def main():
         help="display the fundamental domain of mirror_y.",
     )
     parser.add_argument(
-        "--show_axes",
-        action="store_true",
-        dest="show_axes",
-        help="display compass.",
+        "--show_axes", action="store_true", dest="show_axes", help="display compass.",
     )
     parser.add_argument(
         "--show_bounds",
@@ -88,9 +125,15 @@ def main():
 
 def visbatch(
     statesDir,
+    userecon=False,
     xvfb=False,
     cvel=0.5,
-    cvor=0.5,
+    cvor=0.25,
+    manual=False,
+    lvelmin=0,
+    lvelmax=0,
+    lvormin=0,
+    lvormax=0,
     mirror_y=False,
     print_messages=True,
     n_jobs=def_n_jobs,
@@ -99,54 +142,73 @@ def visbatch(
 ):
 
     statesDir = Path(statesDir)
-    states = sorted(list(statesDir.glob("u*.nc")))
-    min_vel, min_vor = np.inf, np.inf
-    max_vel, max_vor = -np.inf, -np.inf
+    if userecon:
+        states = sorted(list(statesDir.glob("u*.nc")))
+    else:
+        states = sorted(list(statesDir.glob("recon*.nc")))
 
-    print("Finding levels.")
-    with tqdm(total=len(states), disable=not print_messages) as pbar:
-        for i, state in enumerate(states):
-            state = Path(state)
-            velocity = cf.FlowField(str(state.resolve()))
+    if not manual:
+        min_vel, min_vor = np.inf, np.inf
+        max_vel, max_vor = -np.inf, -np.inf
 
-            vorticity = cf.curl(velocity)
-            vorticity.zeroPaddedModes()
-            state_vorticity = state.parent / f"vor_{state.name}"
-            vorticity.save(str(state_vorticity.resolve()))
+        print("Finding levels.")
+        with tqdm(total=len(states), disable=not print_messages) as pbar:
+            for i, state in enumerate(states):
+                state = Path(state)
+                velocity = cf.FlowField(str(state.resolve()))
 
-            xgrid, ygrid, zgrid, velx, _, _ = vis.channelflow_to_numpy(state)
-            _, _, _, vorx, _, _ = vis.channelflow_to_numpy(state_vorticity)
-            nx, ny, nz = len(xgrid), len(ygrid), len(zgrid)
+                vorticity = cf.curl(velocity)
+                vorticity.zeroPaddedModes()
+                state_vorticity = state.parent / f"vor_{state.name}"
+                vorticity.save(str(state_vorticity.resolve()))
 
-            ny_display = ny
-            if mirror_y:
-                if ny % 2 != 0:
-                    ny_display = ny // 2 + 1
-                else:
-                    ny_display = ny // 2
+                xgrid, ygrid, zgrid, velx, _, _ = vis.channelflow_to_numpy(state)
+                _, _, _, vorx, _, _ = vis.channelflow_to_numpy(state_vorticity)
+                nx, ny, nz = len(xgrid), len(ygrid), len(zgrid)
 
-                ygrid = ygrid[-ny_display:]
-                velx = velx[:, -ny_display:, :]
-                vorx = vorx[:, -ny_display:, :]
-            else:
                 ny_display = ny
+                if mirror_y:
+                    if ny % 2 != 0:
+                        ny_display = ny // 2 + 1
+                    else:
+                        ny_display = ny // 2
 
-            min_vel, min_vor = min(min_vel, np.amin(velx)), min(min_vor, np.amin(vorx))
-            max_vel, max_vor = max(max_vel, np.amax(velx)), max(max_vor, np.amax(vorx))
-            pbar.update()
+                    ygrid = ygrid[-ny_display:]
+                    velx = velx[:, -ny_display:, :]
+                    vorx = vorx[:, -ny_display:, :]
+                else:
+                    ny_display = ny
 
-    print("Minima:")
-    print(min_vel, min_vor)
-    print("Maxima:")
-    print(max_vel, max_vor)
+                min_vel, min_vor = (
+                    min(min_vel, np.amin(velx)),
+                    min(min_vor, np.amin(vorx)),
+                )
+                max_vel, max_vor = (
+                    max(max_vel, np.amax(velx)),
+                    max(max_vor, np.amax(vorx)),
+                )
+                pbar.update()
+
+        print("Minima:")
+        print(min_vel, min_vor)
+        print("Maxima:")
+        print(max_vel, max_vor)
 
     if xvfb:
         pv.start_xvfb()
     pv.set_plot_theme("document")
 
     def render_state_i(i):
-        state = Path(states[i])
-        state_vorticity = state.parent / f"vor_{state.name}"
+        state = states[i]
+        if not manual:
+            state_vorticity = state.parent / f"vor_{state.name}"
+        else:
+            velocity = cf.FlowField(str(state.resolve()))
+
+            vorticity = cf.curl(velocity)
+            vorticity.zeroPaddedModes()
+            state_vorticity = state.parent / f"vor_{state.name}"
+            vorticity.save(str(state_vorticity.resolve()))
 
         xgrid, ygrid, zgrid, velx, _, _ = vis.channelflow_to_numpy(state)
         _, _, _, vorx, _, _ = vis.channelflow_to_numpy(state_vorticity)
@@ -165,8 +227,12 @@ def visbatch(
         else:
             ny_display = ny
 
-        vel_levels = cvel * np.array([min_vel, max_vel])
-        vor_levels = cvor * np.array([min_vor, max_vor])
+        if not manual:
+            vel_levels = cvel * np.array([min_vel, max_vel])
+            vor_levels = cvor * np.array([min_vor, max_vor])
+        else:
+            vel_levels = np.array([lvelmin, lvelmax])
+            vor_levels = np.array([lvormin, lvormax])
 
         state_vorticity.unlink()
 
