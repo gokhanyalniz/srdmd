@@ -45,7 +45,16 @@ def main():
     parser = argparse.ArgumentParser(
         description="Produce 3D visualizations of a state",
     )
-    parser.add_argument("statesDir", type=str, help="path to the state.")
+    parser.add_argument("statesdir", type=str, help="path to the state.")
+    parser.add_argument(
+        "savedir", type=str, help="where to save the stills.",
+    )
+    parser.add_argument(
+        "--t_i", type=float, default=-np.inf, dest="t_i", help="initial time.",
+    )
+    parser.add_argument(
+        "--t_f", type=float, default=np.inf, dest="t_f", help="final time.",
+    )
     parser.add_argument(
         "--userecon",
         action="store_true",
@@ -130,7 +139,9 @@ def main():
 
 
 def visbatch(
-    statesDir,
+    statesdir,
+    t_i=-np.inf,
+    t_f=np.inf,
     userecon=False,
     xvfb=False,
     cvel=0.5,
@@ -148,11 +159,20 @@ def visbatch(
     show_bounds=False,
 ):
 
-    statesDir = Path(statesDir)
+    statesdir = Path(statesdir)
     if not userecon:
-        states = sorted(list(statesDir.glob("u*.nc")))
+        states = sorted(list(statesdir.glob("u*.nc")))
+        times = np.array(
+            [float(stateFile.name[1:-3]) for stateFile in states]
+        )
+        sorter = np.argsort(times)
+        times = times[sorter]
+        states = [states[i] for i in sorter]
+        t_filter = np.nonzero(np.logical_and(times >= t_i, times < t_f))[0]
+        times = times[t_filter]
+        states = [states[i] for i in t_filter]
     else:
-        states = sorted(list(statesDir.glob("recon*.nc")))
+        states = sorted(list(statesdir.glob("recon*.nc")))
 
     if absolutelevels:
         min_vel, min_vor = np.inf, np.inf
