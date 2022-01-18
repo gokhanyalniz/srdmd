@@ -9,6 +9,7 @@ import numpy as np
 import pyvista as pv
 import scipy.interpolate as spi
 
+
 # fmt: off
 # Set the paths to channelflow-python
 CHANNELFLOW_PYTHON = getenv("CHANNELFLOW_PYTHON")
@@ -43,7 +44,7 @@ def main():
     )
     parser.add_argument(
         "-cvor",
-        default=0.25,
+        default=0.5,
         type=float,
         dest="cvor",
         help="multiplier for vorticity isosurfaces",
@@ -109,7 +110,7 @@ def vis(
     xvfb=False,
     mirror_y=False,
     cvel=0.5,
-    cvor=0.25,
+    cvor=0.5,
     manual=False,
     lvelmin=0,
     lvelmax=0,
@@ -179,7 +180,7 @@ def vis(
         p.add_mesh(
             contour_vel,
             smooth_shading=True,
-            opacity=0.35,
+            opacity=0.5,
             cmap=["blue", "red"],
             clim=vel_levels,
             show_scalar_bar=False,
@@ -189,7 +190,7 @@ def vis(
         p.add_mesh(
             contour_vor,
             smooth_shading=True,
-            opacity=0.35,
+            opacity=1.0,
             cmap=["purple", "green"],
             clim=vor_levels,
             show_scalar_bar=False,
@@ -203,29 +204,13 @@ def vis(
         else:
             p.show_bounds(xlabel="", ylabel="", zlabel="")
 
-    p.camera.roll += 90
-    p.camera.elevation -= 15
-    p.camera.azimuth -= 45
-    p.camera.roll += 30
-    p.camera.azimuth -= 45
-    p.camera.roll -= 10
-
-    # Old orientations from neubauten
-    # p.camera.position = [-3.8165567986481825, 2.432563985013201, 1.623442321119651]
-    # p.camera.focal_point = [1.5630592574663666, 0.15588548135152808, 0.4599843715554596]
-    # p.camera.view_angle = 30.0
-    # p.camera.view_up = [0.37308813472900676, 0.9240636797097904, -0.08313578992006013]
-    # p.camera.clipping_range = [2.2454569218403426, 10.160445581565819]
-
-    # Elena's numbers
-    # scene.scene.camera.position = [-3.8165567986481825, 2.432563985013201, 1.623442321119651]
-    # scene.scene.camera.focal_point = [1.5630592574663666, 0.15588548135152808, 0.4599843715554596]
-    # scene.scene.camera.view_angle = 30.0
-    # scene.scene.camera.view_up = [0.37308813472900676, 0.9240636797097904, -0.08313578992006013]
-    # scene.scene.camera.clipping_range = [2.2454569218403426, 10.160445581565819]
-    # scene.scene.camera.compute_view_plane_normal()
-
-    p.show(screenshot=f"{state.name}_isosurf.png")
+    cpos = [
+        (-8.7087276075403, 5.0595647811549345, 5.758270814130649),
+        (2.6920391113975386, -0.16116068344232165, 1.9920099095386092),
+        (0.3727620195457797, 0.9169022252699194, -0.14261411598864254),
+    ]
+    cpos = p.show(screenshot=f"{state.name}_isosurf.png", return_cpos=True, cpos=cpos)
+    print("cpos:", cpos)
 
 
 def channelflow_to_numpy(statefile, uniform=False):

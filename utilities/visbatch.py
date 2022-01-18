@@ -64,7 +64,7 @@ def main():
     )
     parser.add_argument(
         "-cvor",
-        default=0.25,
+        default=0.5,
         type=float,
         dest="cvor",
         help="multiplier for vorticity isosurfaces",
@@ -74,6 +74,12 @@ def main():
         action="store_true",
         dest="manual",
         help="use manually provided (lvelmin/max, lvormin/max) isosurface levels.",
+    )
+    parser.add_argument(
+        "--absolutelevels",
+        action="store_true",
+        dest="absolutelevels",
+        help="use isosurface levels (computed with cvel/cvor) that remain constant over time.",
     )
     parser.add_argument(
         "-lvelmin",
@@ -128,8 +134,9 @@ def visbatch(
     userecon=False,
     xvfb=False,
     cvel=0.5,
-    cvor=0.25,
+    cvor=0.5,
     manual=False,
+    absolutelevels=False,
     lvelmin=0,
     lvelmax=0,
     lvormin=0,
@@ -147,7 +154,7 @@ def visbatch(
     else:
         states = sorted(list(statesDir.glob("recon*.nc")))
 
-    if not manual:
+    if absolutelevels:
         min_vel, min_vor = np.inf, np.inf
         max_vel, max_vor = -np.inf, -np.inf
 
@@ -189,11 +196,11 @@ def visbatch(
                 )
                 pbar.update()
 
-        vel_levels = cvel * np.array([min_vel, max_vel])
-        vor_levels = cvor * np.array([min_vor, max_vor])
+        lvelmin, lvelmax = cvel * min_vel, cvel * max_vel
+        lvormin, lvormax = cvor * min_vor, cvor * max_vor
 
-        print("vel_levels:", vel_levels)
-        print("vor_levels:", vor_levels)
+        print("vel_levels:", lvelmin, lvelmax)
+        print("vor_levels:", lvormin, lvormax)
 
     if xvfb:
         pv.start_xvfb()
@@ -201,7 +208,7 @@ def visbatch(
 
     def render_state_i(i):
         state = states[i]
-        if not manual:
+        if manual or absolutelevels:
             state_vorticity = state.parent / f"vor_{state.name}"
         else:
             velocity = cf.FlowField(str(state.resolve()))
@@ -228,12 +235,12 @@ def visbatch(
         else:
             ny_display = ny
 
-        if manual:
+        if manual or absolutelevels:
             vel_levels = np.array([lvelmin, lvelmax])
             vor_levels = np.array([lvormin, lvormax])
         else:
-            vel_levels = cvel * np.array([min_vel, max_vel])
-            vor_levels = cvor * np.array([min_vor, max_vor])
+            vel_levels = cvel * np.array([np.amin(velx), np.amax(velx)])
+            vor_levels = cvor * np.array([np.amin(vorx), np.amax(vorx)])
 
         state_vorticity.unlink()
 
@@ -250,7 +257,7 @@ def visbatch(
             p.add_mesh(
                 contour_vel,
                 smooth_shading=True,
-                opacity=0.35,
+                opacity=0.5,
                 cmap=["blue", "red"],
                 clim=vel_levels,
                 show_scalar_bar=False,
@@ -260,7 +267,7 @@ def visbatch(
             p.add_mesh(
                 contour_vor,
                 smooth_shading=True,
-                opacity=0.35,
+                opacity=1.0,
                 cmap=["purple", "green"],
                 clim=vor_levels,
                 show_scalar_bar=False,
@@ -274,14 +281,12 @@ def visbatch(
             else:
                 p.show_bounds(xlabel="", ylabel="", zlabel="")
 
-        p.camera.roll += 90
-        p.camera.elevation -= 15
-        p.camera.azimuth -= 45
-        p.camera.roll += 30
-        p.camera.azimuth -= 45
-        p.camera.roll -= 10
-
-        p.show(screenshot=f"{state.name}_isosurf.png")
+        cpos = [
+            (-8.7087276075403, 5.0595647811549345, 5.758270814130649),
+            (2.6920391113975386, -0.16116068344232165, 1.9920099095386092),
+            (0.3727620195457797, 0.9169022252699194, -0.14261411598864254),
+        ]
+        p.show(screenshot=f"{state.name}_isosurf.png", cpos=cpos)
 
         # hope memory doesn't leak
         p.clear()
