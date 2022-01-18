@@ -140,6 +140,7 @@ def main():
 
 def visbatch(
     statesdir,
+    savedir,
     t_i=-np.inf,
     t_f=np.inf,
     userecon=False,
@@ -160,11 +161,10 @@ def visbatch(
 ):
 
     statesdir = Path(statesdir)
+    savedir = Path(savedir)
     if not userecon:
         states = sorted(list(statesdir.glob("u*.nc")))
-        times = np.array(
-            [float(stateFile.name[1:-3]) for stateFile in states]
-        )
+        times = np.array([float(stateFile.name[1:-3]) for stateFile in states])
         sorter = np.argsort(times)
         times = times[sorter]
         states = [states[i] for i in sorter]
@@ -186,7 +186,7 @@ def visbatch(
 
                 vorticity = cf.curl(velocity)
                 vorticity.zeroPaddedModes()
-                state_vorticity = state.parent / f"vor_{state.name}"
+                state_vorticity = savedir / f"vor_{state.name}"
                 vorticity.save(str(state_vorticity.resolve()))
 
                 xgrid, ygrid, zgrid, velx, _, _ = vis.channelflow_to_numpy(state)
@@ -229,13 +229,13 @@ def visbatch(
     def render_state_i(i):
         state = states[i]
         if manual or absolutelevels:
-            state_vorticity = state.parent / f"vor_{state.name}"
+            state_vorticity = savedir / f"vor_{state.name}"
         else:
             velocity = cf.FlowField(str(state.resolve()))
 
             vorticity = cf.curl(velocity)
             vorticity.zeroPaddedModes()
-            state_vorticity = state.parent / f"vor_{state.name}"
+            state_vorticity = savedir / f"vor_{state.name}"
             vorticity.save(str(state_vorticity.resolve()))
 
         xgrid, ygrid, zgrid, velx, _, _ = vis.channelflow_to_numpy(state)
@@ -306,7 +306,7 @@ def visbatch(
             (2.6920391113975386, -0.16116068344232165, 1.9920099095386092),
             (0.3727620195457797, 0.9169022252699194, -0.14261411598864254),
         ]
-        p.show(screenshot=f"{state.name}_isosurf.png", cpos=cpos)
+        p.show(screenshot=savedir / f"{state.name}_isosurf.png", cpos=cpos)
 
         # hope memory doesn't leak
         p.clear()
