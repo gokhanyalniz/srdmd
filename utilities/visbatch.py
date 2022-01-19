@@ -40,7 +40,12 @@ def_joblib_backend = "threading"
 # Two videos can be merged side-by-side with
 # ffmpeg -i left.mp4 -i right.mp4 -filter_complex hstack -c:v libx264 -crf 18 -preset veryslow -profile:v high -movflags +faststart -tune animation out.mp4
 
-# This script removes the laminar part
+# alignments
+# hkw, po: -0.0007494755697142752 0.49999918688067363
+# hkw, rpo: -0.2854644074735224 -0.49999919436730633
+# hkw, reconstruction minimum: -0.3854651112499814 -0.04408323190753882
+# p2k, spiral-out: 0.27532851403183856 -0.2353448194208222
+# p2k, nearly-periodic: -0.05452117359540387 -0.26989000258111884
 
 
 def main():
@@ -51,6 +56,20 @@ def main():
     parser.add_argument("statesdir", type=str, help="path to the state.")
     parser.add_argument(
         "savedir", type=str, help="where to save the stills.",
+    )
+    parser.add_argument(
+        "-n_jobs",
+        default=def_n_jobs,
+        type=int,
+        dest="n_jobs",
+        help="number of threads to use",
+    )
+    parser.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        dest="domain",
+        help="to use preset camera angles.",
     )
     parser.add_argument(
         "--t_i", type=float, default=-np.inf, dest="t_i", help="initial time.",
@@ -144,6 +163,7 @@ def main():
 def visbatch(
     statesdir,
     savedir,
+    domain=None,
     t_i=-np.inf,
     t_f=np.inf,
     userecon=False,
@@ -230,6 +250,7 @@ def visbatch(
     pv.set_plot_theme("document")
 
     def render_state_i(i):
+        len_nstates = len(str(len(states) - 1))
         state = states[i]
         if manual or absolutelevels:
             state_vorticity = savedir / f"vor_{state.name}"
@@ -304,12 +325,22 @@ def visbatch(
             else:
                 p.show_bounds(xlabel="", ylabel="", zlabel="")
 
-        cpos = [
-            (-8.7087276075403, 5.0595647811549345, 5.758270814130649),
-            (2.6920391113975386, -0.16116068344232165, 1.9920099095386092),
-            (0.3727620195457797, 0.9169022252699194, -0.14261411598864254),
-        ]
-        p.show(screenshot=savedir / f"{state.name}_isosurf.png", cpos=cpos)
+        if domain is not None:
+            if domain == "hkw":
+                cpos = [
+                    (-8.7087276075403, 5.0595647811549345, 5.758270814130649),
+                    (2.6920391113975386, -0.16116068344232165, 1.9920099095386092),
+                    (0.3727620195457797, 0.9169022252699194, -0.14261411598864254),
+                ]
+            elif domain == "p2k":
+                cpos = [
+                    (-4.32921527798982, 2.4547913166671425, 2.4369139550262204),
+                    (1.3916843186342729, 0.4928656494905181, 0.6023924986065323),
+                    (0.2878184295195465, 0.9502955566900888, -0.11873881658487251),
+                ]
+            p.show(screenshot=savedir / f"{str(i).zfill(len_nstates)}.png", cpos=cpos)
+        else:
+            p.show(screenshot=savedir / f"{str(i).zfill(len_nstates)}.png")
 
         # hope memory doesn't leak
         p.clear()

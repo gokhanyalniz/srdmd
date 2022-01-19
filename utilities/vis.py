@@ -30,6 +30,13 @@ def main():
     )
     parser.add_argument("state", type=str, help="path to the state.")
     parser.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        dest="domain",
+        help="to use preset camera angles.",
+    )
+    parser.add_argument(
         "--noshow", action="store_true", dest="noshow", help="do not display the plots."
     )
     parser.add_argument(
@@ -106,6 +113,7 @@ def main():
 
 def vis(
     state,
+    domain=None,
     noshow=False,
     xvfb=False,
     mirror_y=False,
@@ -204,12 +212,23 @@ def vis(
         else:
             p.show_bounds(xlabel="", ylabel="", zlabel="")
 
-    cpos = [
-        (-8.7087276075403, 5.0595647811549345, 5.758270814130649),
-        (2.6920391113975386, -0.16116068344232165, 1.9920099095386092),
-        (0.3727620195457797, 0.9169022252699194, -0.14261411598864254),
-    ]
-    cpos = p.show(screenshot=f"{state.name}_isosurf.png", return_cpos=True, cpos=cpos)
+    if domain is not None:
+        if domain == "hkw":
+            cpos = [
+                (-8.7087276075403, 5.0595647811549345, 5.758270814130649),
+                (2.6920391113975386, -0.16116068344232165, 1.9920099095386092),
+                (0.3727620195457797, 0.9169022252699194, -0.14261411598864254),
+            ]
+        elif domain == "p2k":
+            cpos = [
+                (-4.32921527798982, 2.4547913166671425, 2.4369139550262204),
+                (1.3916843186342729, 0.4928656494905181, 0.6023924986065323),
+                (0.2878184295195465, 0.9502955566900888, -0.11873881658487251),
+            ]
+        cpos = p.show(f"{state.name}.png", return_cpos=True, cpos=cpos)
+    else:
+        cpos = p.show(f"{state.name}.png", return_cpos=True,)
+
     print("cpos:", cpos)
 
 
