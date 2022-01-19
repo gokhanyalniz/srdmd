@@ -123,6 +123,7 @@ def slice(
     if align:
         state = cf.FlowField(statefiles[0])
         shiftx0, shiftz0, _, _, _, _ = find_shifts(state, tgx, tx, tgz, tz)
+        print("alignment shifts:", shiftx0, shiftz0)
 
     def fill_shifts(i):
         state = cf.FlowField(statefiles[i])

@@ -31,11 +31,14 @@ if def_n_jobs > 1:
 def_joblib_verbosity = 0
 def_joblib_backend = "threading"
 
+# Example command to trim whitespace
+# for d in ./*.png; do convert $d -trim $d; done
+
 # Example ffmpeg command to merge png files to an mp4:
-# ffmpeg -framerate 24 -i %03d.png -c:v libx264 -r 60 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" out.mp4
+# ffmpeg -framerate 24 -i %03d.png -c:v libx264 -crf 18 -preset veryslow -profile:v high -movflags +faststart -tune animation -r 60 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2, format=yuv420p" out.mp4
 
 # Two videos can be merged side-by-side with
-# ffmpeg -i left.mp4 -i right.mp4 -filter_complex hstack output.mp4
+# ffmpeg -i left.mp4 -i right.mp4 -filter_complex hstack -c:v libx264 -crf 18 -preset veryslow -profile:v high -movflags +faststart -tune animation out.mp4
 
 # This script removes the laminar part
 
