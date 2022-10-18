@@ -29,6 +29,17 @@ export LD_LIBRARY_PATH=${USRLOCAL}/lib:$LD_LIBRARY_PATH
 All commands that follow are to be run in the folders extracted from
 the downloaded archives, unless otherwise stated.
 
+## [libzip](https://libzip.org/download/)
+Create a build directory within the extracted archive and go into it.
+Then run
+```
+cmake ../ \
+-DCMAKE_C_COMPILER=$CC \
+-DCMAKE_C_FLAGS="-fPIC -O3" \
+-DCMAKE_INSTALL_PREFIX=$USRLOCAL
+make install
+```
+
 ## [FFTW](https://www.fftw.org/download.html) (with MPI)
 ```
 ./configure --prefix=$USRLOCAL --enable-mpi \
@@ -42,15 +53,28 @@ make install
 ```
 ./configure --prefix=$USRLOCAL \
 CC=$CC \
-CFLAGS="-fPIC -O3"
+CFLAGS="-fPIC -O3 -I${USRLOCAL}/include" \
+LDFLAGS=-L${USRLOCAL}/lib
 make install
 ```
 
-## [NetCDF-C](https://www.unidata.ucar.edu/downloads/netcdf) (serial)
+## [NetCDF-C](https://downloads.unidata.ucar.edu/netcdf/) (serial)
 ```
-./configure --prefix=$USRLOCAL --disable-dap --disable-shared \
+./configure --prefix=$USRLOCAL --disable-dap \
 CC=$CC \
 CFLAGS="-fPIC -O3 -I${USRLOCAL}/include" \
+LDFLAGS=-L${USRLOCAL}/lib
+make install
+```
+
+## [NetCDF-Fortran](https://downloads.unidata.ucar.edu/netcdf/) (serial)
+```
+./configure --prefix=$USRLOCAL \
+CC=$CC \
+FC=$FC \
+F77=$FC \
+CFLAGS="-fPIC -O3 -I${USRLOCAL}/include" \
+FFLAGS="-fPIC -O3 -I${USRLOCAL}/include" \
 LDFLAGS=-L${USRLOCAL}/lib
 make install
 ```
@@ -69,8 +93,9 @@ Then run
 cmake ../ \
 -DCMAKE_BUILD_TYPE=release \
 -DCMAKE_C_COMPILER=$MCC \
+-DCMAKE_C_FLAGS="-fPIC -O3" \
 -DCMAKE_CXX_COMPILER=$MCXXC \
--DCMAKE_CXX_FLAGS="-L${USRLOCAL}/lib -lnetcdf -lhdf5_hl -lhdf5 -lzip -lcurl" \
+-DCMAKE_CXX_FLAGS="-fPIC -O3" \
 -DCMAKE_INSTALL_PREFIX=$CHANNELFLOW \
 -DFFTW_INCLUDE_DIR=${USRLOCAL}/include \
 -DFFTW_LIBRARY=${USRLOCAL}/lib/libfftw3.a \
@@ -78,6 +103,7 @@ cmake ../ \
 -DWITH_NETCDF=Serial \
 -DNETCDF_INCLUDE_DIR=${USRLOCAL}/include \
 -DNETCDF_LIBRARY=${USRLOCAL}/lib/libnetcdf.a \
--DEIGEN3_INCLUDE_DIR=${USRLOCAL}/include/eigen3
+-DEIGEN3_INCLUDE_DIR=${USRLOCAL}/include \
+-DWITH_GTEST=OFF
 make -j install
 ```
