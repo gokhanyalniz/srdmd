@@ -57,6 +57,7 @@ CFLAGS="-fPIC -O3 -I${USRLOCAL}/include" \
 LDFLAGS=-L${USRLOCAL}/lib
 make install
 ```
+Add `--enable-cxx` if you want the C++ high-level library.
 
 ## [NetCDF-C](https://downloads.unidata.ucar.edu/netcdf/) (serial)
 ```
@@ -107,3 +108,4 @@ cmake ../ \
 -DWITH_GTEST=OFF
 make -j install
 ```
+Add `-DWITH_HDF5CXX=ON` if you want HDF5 support. (Needs HDF5 C++.)
