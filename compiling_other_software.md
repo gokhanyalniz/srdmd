@@ -108,4 +108,5 @@ cmake ../ \
 -DWITH_GTEST=OFF
 make -j install
 ```
-Add `-DWITH_HDF5CXX=ON` if you want HDF5 support. (Needs HDF5 C++.)
+Add `-DHDF5_ROOT=$USRLOCAL \-DWITH_HDF5CXX=ON` if you want HDF5 support. 
+(Needs HDF5 C++.)
