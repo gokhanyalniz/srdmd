@@ -10,11 +10,13 @@ authors:
 - family-names: "Budanur"
   given-names: "Nazmi Burak"
   orcid: "https://orcid.org/0000-0003-0423-5010"
-title: "SRDMD code, data and tutorials"
-date-released: 2022-01-08
+title: "Symmetry-reduced Dynamic Mode Decomposition of Near-wall Turbulence: Code and data"
+date-released: 2022-12-09
 url: "https://github.com/gokhanyalniz/srdmd"
 preferred-citation:
-  type: unpublished
+  type: doi
+  value: 10.48550/arXiv.2101.07516
+  description: The ArXiv preprint of the paper
   authors:
   - family-names: "Marensi"
     given-names: "Elena"

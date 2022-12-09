@@ -1,7 +1,8 @@
-# SRDMD code, data and tutorials
+# Symmetry-reduced Dynamic Mode Decomposition of Near-wall Turbulence: Code and data
 This repository contains code and data used in 
-[arXiv:2101.07516](https://arxiv.org/abs/2101.07516) along with tutorials to 
-use the code and reproduce some of the results of the paper.
+[arXiv:2101.07516](https://arxiv.org/abs/2101.07516), to appear in the 
+Journal of Fluid Mechanics, along with tutorials to use the code and reproduce 
+some of the results of the paper.
 
 ## Note on aliases
 We use aliases like `USRLOCAL` throughout for ease. One can define it with

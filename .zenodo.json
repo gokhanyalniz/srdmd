@@ -1,0 +1,32 @@
+{
+    "creators": [
+        {
+            "orcid": "0000-0002-8490-9312",
+            "affiliation": "Institute of Science and Technology Austria",
+            "name": "Yalnız, Gökhan"
+        },
+        {
+            "orcid": "0000-0001-7173-4923",
+            "affiliation": "Institute of Science and Technology Austria, The University of Sheffield",
+            "name": "Marensi, Elena"
+        },
+        {
+            "orcid": "0000-0003-0423-5010",
+            "affiliation": "Institute of Science and Technology Austria, Max Planck Institute for the Physics of Complex Systems",
+            "name": "Marensi, Elena"
+        }
+    ],
+
+    "license": "MIT",
+
+    "title": "Symmetry-reduced Dynamic Mode Decomposition of Near-wall Turbulence: Code and data",
+
+    "related_identifiers": [
+        {
+            "scheme": "doi",
+            "identifier": "10.48550/arXiv.2101.07516",
+            "relation": "isDocumentedBy",
+            "resource_type": "publication-article"
+        }
+    ]
+}
