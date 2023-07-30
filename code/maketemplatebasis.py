@@ -47,7 +47,7 @@ def main():
     parser.add_argument(
         "-b",
         type=float,
-        default=-1,
+        default=1,
         dest="b",
     )
 
